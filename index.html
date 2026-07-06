@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENIGMA — Rotor Cipher Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="brand">
+  <div class="eyebrow">Wehrmacht Cipher Bureau — Model Simulation</div>
+  <h1>ENIGMA</h1>
+  <div class="sub">3-Rotor Cipher Machine · Historically Accurate Wiring · Reflector B</div>
+</div>
+
+<div class="machine" id="machine">
+
+  <div class="panel-label">Rotor Selection · Ring Setting · Position</div>
+  <div class="rotor-bay" id="rotorBay"></div>
+
+  <div class="panel-label">Lampboard</div>
+  <div class="lampboard">
+    <div class="lamp-row" id="lampRow1"></div>
+    <div class="lamp-row" id="lampRow2"></div>
+    <div class="lamp-row" id="lampRow3"></div>
+  </div>
+
+  <div class="panel-label">Keyboard</div>
+  <div class="keyboard">
+    <div class="key-row" id="keyRow1"></div>
+    <div class="key-row" id="keyRow2"></div>
+    <div class="key-row" id="keyRow3"></div>
+  </div>
+
+  <div class="panel-label">Steckerbrett (Plugboard) — click two letters to pair, up to 10 pairs</div>
+  <div class="plugboard">
+    <div class="plug-row" id="plugRow1"></div>
+    <div class="plug-row" id="plugRow2"></div>
+    <div class="plug-row" id="plugRow3"></div>
+    <div class="plug-hint" id="plugHint">0 pairs connected</div>
+  </div>
+
+  <div class="panel-label">Live Keying — press keys above, watch lamps and rotors react letter by letter</div>
+  <div class="ticker-section">
+    <div class="ticker">
+      <div class="ticker-label">Input</div>
+      <input class="ticker-input" id="inputText" placeholder="Type or click keys…" autocomplete="off" spellcheck="false">
+    </div>
+    <div class="ticker">
+      <div class="ticker-label">Output</div>
+      <div class="ticker-text" id="outputText">&nbsp;</div>
+    </div>
+  </div>
+
+  <div class="controls-row">
+    <button class="ctrl-btn" id="resetBtn">Reset Rotors</button>
+    <button class="ctrl-btn" id="clearBtn">Clear Text</button>
+    <button class="ctrl-btn" id="clearPlugsBtn">Clear Plugboard</button>
+  </div>
+
+  <div class="panel-label" style="margin-top:24px;">Message Encrypt / Decrypt — process a full message from a fixed starting position</div>
+  <div class="msg-panel">
+    <div class="msg-key-row">
+      <span class="msg-key-label">Message Key (rotor start position)</span>
+      <select class="msg-key-select" id="msgKeyLeft"></select>
+      <select class="msg-key-select" id="msgKeyMid"></select>
+      <select class="msg-key-select" id="msgKeyRight"></select>
+      <button class="msg-key-apply" id="msgKeyApply">Set Rotors To Key</button>
+    </div>
+    <div class="msg-grid">
+      <div>
+        <div class="msg-box-label">Message text</div>
+        <textarea class="msg-textarea" id="msgInput" placeholder="Type or paste plaintext to encrypt, or ciphertext to decrypt…" spellcheck="false"></textarea>
+      </div>
+      <div>
+        <div class="msg-box-label">Result</div>
+        <textarea class="msg-textarea" id="msgOutput" readonly placeholder="Result appears here…"></textarea>
+      </div>
+    </div>
+    <div class="msg-btn-row">
+      <button class="msg-btn primary" id="encryptBtn">Encrypt ➜</button>
+      <button class="msg-btn primary" id="decryptBtn">Decrypt ➜</button>
+      <button class="msg-btn" id="swapBtn">↕ Swap Boxes</button>
+      <button class="msg-btn" id="copyBtn">Copy Result</button>
+    </div>
+    <div class="msg-note">
+      Enigma is self-reciprocal: Encrypt and Decrypt run the exact same wiring. Both buttons first jump the rotors to the <b>Message Key</b> above, so set the same key before encrypting and before decrypting the same text. Rotor type, ring settings, and plugboard (set above) still apply. Non-letter characters pass through unchanged.
+    </div>
+  </div>
+</div>
+
+<footer>
+  Each letter is scrambled through the <b>plugboard</b>, three <b>rotors</b>, and a <b>reflector</b>, then back out through the rotors and plugboard again — no letter ever encrypts to itself. Typing the same ciphertext back through an identically-set machine decrypts it, exactly as it worked in 1940s traffic.
+</footer>
+
+<script src="script.js"></script>
+
+</body>
+</html>

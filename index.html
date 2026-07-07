@@ -90,6 +90,30 @@
       Enigma is self-reciprocal: Encrypt and Decrypt run the exact same wiring. Both buttons first jump the rotors to the <b>Message Key</b> above, so set the same key before encrypting and before decrypting the same text. Rotor type, ring settings, and plugboard (set above) still apply. Non-letter characters pass through unchanged.
     </div>
   </div>
+
+  <div class="panel-label" style="margin-top:24px;">Send via Gmail</div>
+  <div class="msg-panel">
+    <div class="msg-key-row">
+      <span class="msg-key-label">Recipient email</span>
+      <input class="email-input" id="recipientEmail" type="email" placeholder="someone@example.com" autocomplete="off">
+    </div>
+    <div class="msg-key-row">
+      <span class="msg-key-label">Subject</span>
+      <input class="email-input" id="emailSubject" type="text" value="Enigma Encrypted Message">
+    </div>
+    <div class="msg-key-row">
+      <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cream-dim);cursor:pointer;">
+        <input type="checkbox" id="includeSettings">
+        Include rotor settings &amp; plugboard in email (needed for recipient to decrypt — send separately for better security)
+      </label>
+    </div>
+    <div class="msg-btn-row">
+      <button class="msg-btn primary" id="sendGmailBtn">✉ Send Result via Gmail</button>
+    </div>
+    <div class="msg-note" id="emailStatus">
+      Opens a pre-filled Gmail compose window with the <b>Result</b> box above as the message body. Gmail requires you to click Send yourself — no email is dispatched automatically from this page.
+    </div>
+  </div>
 </div>
 
 <footer>

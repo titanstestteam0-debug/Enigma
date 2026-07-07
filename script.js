@@ -390,5 +390,67 @@
     machine.appendChild(r);
   });
 
+  // ===== Send via Gmail =====
+  const recipientEmailEl = document.getElementById('recipientEmail');
+  const emailSubjectEl = document.getElementById('emailSubject');
+  const includeSettingsEl = document.getElementById('includeSettings');
+  const emailStatusEl = document.getElementById('emailStatus');
+  const sendGmailBtn = document.getElementById('sendGmailBtn');
+
+  function isValidEmail(str){
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+  }
+
+  sendGmailBtn.addEventListener('click', ()=>{
+    const to = recipientEmailEl.value.trim();
+    const resultText = msgOutputEl.value.trim();
+
+    if(!isValidEmail(to)){
+      recipientEmailEl.classList.add('invalid');
+      emailStatusEl.innerHTML = '<span style="color:var(--red)">Enter a valid recipient email address first.</span>';
+      recipientEmailEl.focus();
+      return;
+    }
+    recipientEmailEl.classList.remove('invalid');
+
+    if(!resultText){
+      emailStatusEl.innerHTML = '<span style="color:var(--red)">Nothing to send yet — Encrypt or Decrypt a message first, or type into the Result box.</span>';
+      return;
+    }
+
+    const subject = emailSubjectEl.value.trim() || 'Enigma Encrypted Message';
+
+    let body = resultText + '\n\n';
+
+    if(includeSettingsEl.checked){
+      body += '--- Cipher settings ---\n';
+      body += 'Rotors (L, M, R): ' + state.rotorTypes.join(', ') + '\n';
+      body += 'Ring settings (L, M, R): ' + state.ringSettings.join(', ') + '\n';
+      body += 'Message key (L, M, R): ' + msgKeySelects.map(s=>s.value).join(', ') + '\n';
+      const pairs = [];
+      const seen = new Set();
+      Object.keys(state.plugPairs).forEach(a=>{
+        const b = state.plugPairs[a];
+        const key = [a,b].sort().join('');
+        if(!seen.has(key)){ seen.add(key); pairs.push(a+b); }
+      });
+      body += 'Plugboard pairs: ' + (pairs.length ? pairs.join(' ') : 'none') + '\n\n';
+    }
+
+    body += 'Sent from the Enigma simulator.';
+
+    const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+      + '&to=' + encodeURIComponent(to)
+      + '&su=' + encodeURIComponent(subject)
+      + '&body=' + encodeURIComponent(body);
+
+    window.open(gmailUrl, '_blank');
+    emailStatusEl.innerHTML = 'Gmail compose window opened for <b>' + to + '</b> — review it and click <b>Send</b> over there.';
+  });
+
+  recipientEmailEl.addEventListener('input', ()=>{
+    recipientEmailEl.classList.remove('invalid');
+  });
+
   refreshPlugUI();
 })();

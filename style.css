@@ -363,6 +363,21 @@
     cursor:pointer;
   }
   .msg-key-apply:hover{ color:var(--brass-bright); border-color:var(--brass); }
+
+  .email-input{
+    font-family:var(--font-mono);
+    font-size:16px;
+    background:var(--panel-raised);
+    color:var(--cream);
+    border:1px solid rgba(200,162,77,0.35);
+    border-radius:3px;
+    padding:7px 10px;
+    flex:1 1 220px;
+    min-width:160px;
+    outline:none;
+  }
+  .email-input:focus{ border-color:var(--brass); }
+  .email-input.invalid{ border-color:var(--red); }
   .msg-grid{
     display:grid;
     grid-template-columns:1fr 1fr;

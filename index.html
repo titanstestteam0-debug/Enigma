@@ -102,27 +102,43 @@
     </div>
   </div>
 
-  <div class="panel-label" style="margin-top:24px;">Send via Gmail</div>
+  <div class="panel-label" style="margin-top:24px;">Send Result</div>
   <div class="msg-panel">
-    <div class="msg-key-row">
-      <span class="msg-key-label">Recipient email</span>
-      <input class="email-input" id="recipientEmail" type="email" placeholder="someone@example.com" autocomplete="off">
+    <div class="channel-toggle">
+      <button class="channel-btn active" id="channelEmailBtn" type="button">✉ Email (Gmail)</button>
+      <button class="channel-btn" id="channelWaBtn" type="button">💬 WhatsApp</button>
     </div>
-    <div class="msg-key-row">
-      <span class="msg-key-label">Subject</span>
-      <input class="email-input" id="emailSubject" type="text" value="Enigma Encrypted Message">
+
+    <div id="emailFields">
+      <div class="msg-key-row">
+        <span class="msg-key-label">Recipient email</span>
+        <input class="email-input" id="recipientEmail" type="email" placeholder="someone@example.com" autocomplete="off">
+      </div>
+      <div class="msg-key-row">
+        <span class="msg-key-label">Subject</span>
+        <input class="email-input" id="emailSubject" type="text" value="Enigma Encrypted Message">
+      </div>
     </div>
+
+    <div id="waFields" style="display:none;">
+      <div class="msg-key-row">
+        <span class="msg-key-label">Recipient phone number</span>
+        <input class="email-input" id="recipientPhone" type="tel" placeholder="+62 812xxxxxxxx" autocomplete="off">
+      </div>
+      <div class="msg-note" style="margin-top:0;">Include the country code (e.g. +62 for Indonesia, +1 for US). Spaces and dashes are fine.</div>
+    </div>
+
     <div class="msg-key-row">
       <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--cream-dim);cursor:pointer;">
         <input type="checkbox" id="includeSettings">
-        Include rotor settings &amp; plugboard in email (needed for recipient to decrypt — send separately for better security)
+        Include rotor settings &amp; plugboard in message (needed for recipient to decrypt — send separately for better security)
       </label>
     </div>
     <div class="msg-btn-row">
-      <button class="msg-btn primary" id="sendGmailBtn">✉ Send Result via Gmail</button>
+      <button class="msg-btn primary" id="sendResultBtn">Send Result</button>
     </div>
-    <div class="msg-note" id="emailStatus">
-      Opens a pre-filled Gmail compose window with the <b>Result</b> box above as the message body. Gmail requires you to click Send yourself — no email is dispatched automatically from this page.
+    <div class="msg-note" id="sendStatus">
+      Opens a pre-filled Gmail compose window with the <b>Result</b> box above as the message body. You still click Send yourself — nothing is dispatched automatically from this page.
     </div>
   </div>
 </div>

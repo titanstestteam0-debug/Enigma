@@ -35,21 +35,32 @@
   // ===== Build UI: Rotor bay =====
   const rotorBay = document.getElementById('rotorBay');
   const rotorLetterEls = [];
-  ["Left","Middle","Right"].forEach((label, idx) => {
-    const unit = document.createElement('div');
-    unit.className = 'rotor-unit';
+  const rotorSelectGroups = [[], [], []]; // synced <select> elements per rotor index (main bay + message panel)
 
+  function setRotorType(idx, value){
+    state.rotorTypes[idx] = value;
+    rotorSelectGroups[idx].forEach(sel=>{ if(sel.value !== value) sel.value = value; });
+  }
+
+  function createRotorTypeSelect(idx, compact){
     const select = document.createElement('select');
     select.className = 'rotor-select';
     Object.keys(ROTORS).forEach(r=>{
       const opt = document.createElement('option');
-      opt.value = r; opt.textContent = "Rtr "+r;
+      opt.value = r; opt.textContent = compact ? r : ("Rtr "+r);
       if(r === state.rotorTypes[idx]) opt.selected = true;
       select.appendChild(opt);
     });
-    select.addEventListener('change', ()=>{
-      state.rotorTypes[idx] = select.value;
-    });
+    select.addEventListener('change', ()=> setRotorType(idx, select.value));
+    rotorSelectGroups[idx].push(select);
+    return select;
+  }
+
+  ["Left","Middle","Right"].forEach((label, idx) => {
+    const unit = document.createElement('div');
+    unit.className = 'rotor-unit';
+
+    const select = createRotorTypeSelect(idx, false);
 
     const ringRow = document.createElement('div');
     ringRow.className = 'ring-row';
@@ -103,6 +114,15 @@
     rotorBay.appendChild(unit);
   });
 
+  // Compact rotor-order selects inside the message panel (synced with main rotor bay)
+  const msgRotorRow = document.getElementById('msgRotorRow');
+  if(msgRotorRow){
+    [0,1,2].forEach(idx=>{
+      const sel = createRotorTypeSelect(idx, true);
+      msgRotorRow.appendChild(sel);
+    });
+  }
+
   function updateRotorDisplay(animateIdx){
     state.positions.forEach((p, i)=>{
       rotorLetterEls[i].textContent = ALPHA[p];
@@ -146,19 +166,39 @@
     });
   });
 
-  // ===== Build UI: Plugboard =====
-  const jackEls = {};
+  // ===== Build UI: Plugboard (supports multiple synced boards) =====
+  const jackBoards = []; // each entry: { A: el, B: el, ... }
   let plugSelection = null;
-  [document.getElementById('plugRow1'), document.getElementById('plugRow2'), document.getElementById('plugRow3')].forEach((rowEl, i)=>{
-    PLUG_ROWS[i].forEach(ch=>{
-      const jack = document.createElement('div');
-      jack.className = 'jack';
-      jack.textContent = ch;
-      jack.addEventListener('click', ()=> handleJackClick(ch));
-      rowEl.appendChild(jack);
-      jackEls[ch] = jack;
+  const plugHintEls = [];
+
+  function buildPlugboardBoard(rowEls, hintEl){
+    const jackEls = {};
+    rowEls.forEach((rowEl, i)=>{
+      PLUG_ROWS[i].forEach(ch=>{
+        const jack = document.createElement('div');
+        jack.className = 'jack';
+        jack.textContent = ch;
+        jack.addEventListener('click', ()=> handleJackClick(ch));
+        rowEl.appendChild(jack);
+        jackEls[ch] = jack;
+      });
     });
-  });
+    jackBoards.push(jackEls);
+    if(hintEl) plugHintEls.push(hintEl);
+  }
+
+  buildPlugboardBoard(
+    [document.getElementById('plugRow1'), document.getElementById('plugRow2'), document.getElementById('plugRow3')],
+    document.getElementById('plugHint')
+  );
+
+  const msgPlugRow1 = document.getElementById('msgPlugRow1');
+  if(msgPlugRow1){
+    buildPlugboardBoard(
+      [msgPlugRow1, document.getElementById('msgPlugRow2'), document.getElementById('msgPlugRow3')],
+      document.getElementById('msgPlugHint')
+    );
+  }
 
   function handleJackClick(ch){
     // If already paired, unpair
@@ -193,15 +233,18 @@
   }
 
   function refreshPlugUI(){
-    Object.values(jackEls).forEach(j=>{ j.classList.remove('selected','paired'); });
-    Object.keys(state.plugPairs).forEach(ch=>{
-      jackEls[ch].classList.add('paired');
+    jackBoards.forEach(jackEls=>{
+      Object.values(jackEls).forEach(j=>{ j.classList.remove('selected','paired'); });
+      Object.keys(state.plugPairs).forEach(ch=>{
+        jackEls[ch].classList.add('paired');
+      });
+      if(plugSelection){
+        jackEls[plugSelection].classList.add('selected');
+      }
     });
-    if(plugSelection){
-      jackEls[plugSelection].classList.add('selected');
-    }
     const pairCount = Object.keys(state.plugPairs).length / 2;
-    document.getElementById('plugHint').textContent = pairCount + " pair" + (pairCount===1?"":"s") + " connected";
+    const hintText = pairCount + " pair" + (pairCount===1?"":"s") + " connected";
+    plugHintEls.forEach(el=>{ el.textContent = hintText; });
   }
 
   // ===== Enigma encryption logic =====

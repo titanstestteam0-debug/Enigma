@@ -433,38 +433,51 @@
     machine.appendChild(r);
   });
 
-  // ===== Send via Gmail =====
+  // ===== Send Result: Email (Gmail) or WhatsApp =====
   const recipientEmailEl = document.getElementById('recipientEmail');
   const emailSubjectEl = document.getElementById('emailSubject');
+  const recipientPhoneEl = document.getElementById('recipientPhone');
   const includeSettingsEl = document.getElementById('includeSettings');
-  const emailStatusEl = document.getElementById('emailStatus');
-  const sendGmailBtn = document.getElementById('sendGmailBtn');
+  const sendStatusEl = document.getElementById('sendStatus');
+  const sendResultBtn = document.getElementById('sendResultBtn');
+  const channelEmailBtn = document.getElementById('channelEmailBtn');
+  const channelWaBtn = document.getElementById('channelWaBtn');
+  const emailFieldsEl = document.getElementById('emailFields');
+  const waFieldsEl = document.getElementById('waFields');
+
+  let sendChannel = 'email';
+
+  const STATUS_HINTS = {
+    email: 'Opens a pre-filled Gmail compose window with the <b>Result</b> box above as the message body. You still click Send yourself — nothing is dispatched automatically from this page.',
+    whatsapp: 'Opens WhatsApp (app or web) with a pre-filled chat to the number below. You still tap Send yourself — nothing is dispatched automatically from this page.'
+  };
+
+  function setChannel(channel){
+    sendChannel = channel;
+    channelEmailBtn.classList.toggle('active', channel === 'email');
+    channelWaBtn.classList.toggle('active', channel === 'whatsapp');
+    emailFieldsEl.style.display = channel === 'email' ? '' : 'none';
+    waFieldsEl.style.display = channel === 'whatsapp' ? '' : 'none';
+    sendResultBtn.textContent = channel === 'email' ? '✉ Send Result via Gmail' : '💬 Send Result via WhatsApp';
+    sendStatusEl.innerHTML = STATUS_HINTS[channel];
+  }
+  channelEmailBtn.addEventListener('click', ()=> setChannel('email'));
+  channelWaBtn.addEventListener('click', ()=> setChannel('whatsapp'));
+  setChannel('email');
 
   function isValidEmail(str){
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
   }
+  function digitsOnly(str){
+    return str.replace(/[^\d]/g, '');
+  }
+  function isValidPhone(str){
+    const d = digitsOnly(str);
+    return d.length >= 8 && d.length <= 15;
+  }
 
-  sendGmailBtn.addEventListener('click', ()=>{
-    const to = recipientEmailEl.value.trim();
-    const resultText = msgOutputEl.value.trim();
-
-    if(!isValidEmail(to)){
-      recipientEmailEl.classList.add('invalid');
-      emailStatusEl.innerHTML = '<span style="color:var(--red)">Enter a valid recipient email address first.</span>';
-      recipientEmailEl.focus();
-      return;
-    }
-    recipientEmailEl.classList.remove('invalid');
-
-    if(!resultText){
-      emailStatusEl.innerHTML = '<span style="color:var(--red)">Nothing to send yet — Encrypt or Decrypt a message first, or type into the Result box.</span>';
-      return;
-    }
-
-    const subject = emailSubjectEl.value.trim() || 'Enigma Encrypted Message';
-
+  function buildMessageBody(resultText){
     let body = resultText + '\n\n';
-
     if(includeSettingsEl.checked){
       body += '--- Cipher settings ---\n';
       body += 'Rotors (L, M, R): ' + state.rotorTypes.join(', ') + '\n';
@@ -479,20 +492,63 @@
       });
       body += 'Plugboard pairs: ' + (pairs.length ? pairs.join(' ') : 'none') + '\n\n';
     }
-
     body += 'Sent from the Enigma simulator.';
+    return body;
+  }
 
-    const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
-      + '&to=' + encodeURIComponent(to)
-      + '&su=' + encodeURIComponent(subject)
-      + '&body=' + encodeURIComponent(body);
+  sendResultBtn.addEventListener('click', ()=>{
+    const resultText = msgOutputEl.value.trim();
+    if(!resultText){
+      sendStatusEl.innerHTML = '<span style="color:var(--red)">Nothing to send yet — Encrypt or Decrypt a message first, or type into the Result box.</span>';
+      return;
+    }
 
-    window.open(gmailUrl, '_blank');
-    emailStatusEl.innerHTML = 'Gmail compose window opened for <b>' + to + '</b> — review it and click <b>Send</b> over there.';
+    if(sendChannel === 'email'){
+      const to = recipientEmailEl.value.trim();
+      if(!isValidEmail(to)){
+        recipientEmailEl.classList.add('invalid');
+        sendStatusEl.innerHTML = '<span style="color:var(--red)">Enter a valid recipient email address first.</span>';
+        recipientEmailEl.focus();
+        return;
+      }
+      recipientEmailEl.classList.remove('invalid');
+
+      const subject = emailSubjectEl.value.trim() || 'Enigma Encrypted Message';
+      const body = buildMessageBody(resultText);
+
+      const gmailUrl = 'https://mail.google.com/mail/?view=cm&fs=1'
+        + '&to=' + encodeURIComponent(to)
+        + '&su=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(body);
+
+      window.open(gmailUrl, '_blank');
+      sendStatusEl.innerHTML = 'Gmail compose window opened for <b>' + to + '</b> — review it and click <b>Send</b> over there.';
+
+    } else {
+      const rawPhone = recipientPhoneEl.value.trim();
+      if(!isValidPhone(rawPhone)){
+        recipientPhoneEl.classList.add('invalid');
+        sendStatusEl.innerHTML = '<span style="color:var(--red)">Enter a valid phone number with country code first.</span>';
+        recipientPhoneEl.focus();
+        return;
+      }
+      recipientPhoneEl.classList.remove('invalid');
+
+      const phone = digitsOnly(rawPhone);
+      const body = buildMessageBody(resultText);
+
+      const waUrl = 'https://wa.me/' + phone + '?text=' + encodeURIComponent(body);
+
+      window.open(waUrl, 'wa_web_tab');
+      sendStatusEl.innerHTML = 'WhatsApp chat opened for <b>+' + phone + '</b> — review it and tap <b>Send</b> over there.';
+    }
   });
 
   recipientEmailEl.addEventListener('input', ()=>{
     recipientEmailEl.classList.remove('invalid');
+  });
+  recipientPhoneEl.addEventListener('input', ()=>{
+    recipientPhoneEl.classList.remove('invalid');
   });
 
   refreshPlugUI();

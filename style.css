@@ -378,6 +378,31 @@
   }
   .email-input:focus{ border-color:var(--brass); }
   .email-input.invalid{ border-color:var(--red); }
+
+  /* ===== Collapsible rotor/plugboard settings inside message panel ===== */
+  .settings-details{
+    margin:14px 0 4px;
+    border:1px solid rgba(200,162,77,0.2);
+    border-radius:5px;
+    padding:4px 10px 12px;
+    background:rgba(0,0,0,0.15);
+  }
+  .settings-details summary{
+    font-family:var(--font-display);
+    font-size:11px;
+    letter-spacing:0.15em;
+    text-transform:uppercase;
+    color:var(--brass-dim);
+    cursor:pointer;
+    padding:8px 2px;
+    list-style:none;
+    user-select:none;
+  }
+  .settings-details summary::-webkit-details-marker{ display:none; }
+  .settings-details summary:hover{ color:var(--brass-bright); }
+  .settings-details[open] summary{ margin-bottom:6px; }
+  #msgRotorRow{ margin-bottom:12px; }
+  #msgRotorRow .rotor-select{ width:66px; }
   .msg-grid{
     display:grid;
     grid-template-columns:1fr 1fr;
@@ -480,6 +505,7 @@
     .ctrl-btn, .msg-btn{ padding:9px 12px; font-size:11px; flex:1 1 auto; }
     .msg-key-row{ gap:6px; }
     .ticker-section{ gap:8px; }
+    #msgRotorRow .rotor-select{ width:70px; }
   }
 
   /* ===== Small phones ===== */
@@ -501,4 +527,5 @@
     .msg-key-label{ width:100%; text-align:center; }
     .ctrl-btn, .msg-btn{ font-size:10px; padding:8px 8px; letter-spacing:0.1em; }
     footer{ font-size:10px; padding:0 4px; }
+    #msgRotorRow .rotor-select{ width:64px; }
   }

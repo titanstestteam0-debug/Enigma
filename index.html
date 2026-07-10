@@ -22,6 +22,12 @@
   <div class="panel-label">Rotor Selection · Ring Setting · Position</div>
   <div class="rotor-bay" id="rotorBay"></div>
 
+  <div class="panel-label">Reflector (Umkehrwalze)</div>
+  <div class="reflector-row">
+    <select class="rotor-select" id="reflectorSelect" style="width:auto; padding:6px 10px;"></select>
+    <span class="reflector-hint" id="reflectorHint"></span>
+  </div>
+
   <div class="panel-label">Lampboard</div>
   <div class="lampboard">
     <div class="lamp-row" id="lampRow1"></div>
@@ -82,6 +88,12 @@
       <div class="plug-row" id="msgPlugRow3"></div>
       <div class="plug-hint" id="msgPlugHint">0 pairs connected</div>
     </details>
+
+    <div class="channel-toggle" style="margin-bottom:14px;">
+      <button class="channel-btn active" id="modeLettersBtn" type="button">1️⃣ 1-Step (Enigma only)</button>
+      <button class="channel-btn" id="modeBinaryBtn" type="button">2️⃣ 2-Step (Enigma ➜ Binary)</button>
+    </div>
+
     <div class="msg-grid">
       <div>
         <div class="msg-box-label">Message text</div>
@@ -98,7 +110,8 @@
       <button class="msg-btn" id="swapBtn">↕ Swap Boxes</button>
       <button class="msg-btn" id="copyBtn">Copy Result</button>
     </div>
-    <div class="msg-note">
+    <div class="step-breakdown" id="stepBreakdown" style="display:none;"></div>
+    <div class="msg-note" id="modeNote">
       Enigma is self-reciprocal: Encrypt and Decrypt run the exact same wiring. Both buttons first jump the rotors to the <b>Message Key</b> above, so set the same key before encrypting and before decrypting the same text. Rotor type, ring settings, and plugboard (set above) still apply. Non-letter characters pass through unchanged.
     </div>
   </div>

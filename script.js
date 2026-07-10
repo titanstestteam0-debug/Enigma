@@ -10,13 +10,24 @@
     V:   { wiring:"VZBRGITYUPSDNHLXAWMJQOFECK", notch:"Z" },
   };
   const REFLECTOR_B = "YRUHQSLDPXNGOKMIEBFZCWVJAT";
+  // "Perfect" reflector — a custom involution that, unlike every real Enigma reflector,
+  // allows a handful of letters (J, Q, X, Z) to encrypt to themselves. Real reflectors were
+  // wired from cable pairs with no letter ever wired back to its own contact — that structural
+  // gap is exactly what let Bletchley Park's cribs work. This reflector patches it while staying
+  // a valid involution, so encryption/decryption is still perfectly symmetric.
+  const REFLECTOR_PERFECT = "BADCFEHGKJIMLONRQPTSVUYXWZ";
+  const REFLECTORS = {
+    B: { wiring: REFLECTOR_B, label: "B — Historical (has the No-Self flaw)" },
+    P: { wiring: REFLECTOR_PERFECT, label: "Perfect — No-Self flaw removed" }
+  };
 
   // ===== State =====
   let state = {
     rotorTypes: ["I","II","III"],      // left, mid, right
     ringSettings: [1,1,1],             // 1-26
     positions: [0,0,0],                // 0-25 (A-Z) current window letter, left/mid/right
-    plugPairs: {}                       // letter -> letter map (both directions)
+    plugPairs: {},                      // letter -> letter map (both directions)
+    reflector: "P"                      // default to the fixed reflector
   };
 
   const KEY_ROWS = [
@@ -122,6 +133,29 @@
       msgRotorRow.appendChild(sel);
     });
   }
+
+  // ===== Reflector selector =====
+  const REFLECTOR_HINTS = {
+    B: 'Historically accurate: this reflector guarantees a letter can never encrypt to itself — the exact structural weakness Bletchley Park exploited with cribs.',
+    P: 'The flaw is patched: this reflector allows a few letters to occasionally encrypt to themselves, so no crib can rely on "this letter never appears here."'
+  };
+  const reflectorSelect = document.getElementById('reflectorSelect');
+  const reflectorHint = document.getElementById('reflectorHint');
+  Object.keys(REFLECTORS).forEach(key=>{
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = REFLECTORS[key].label;
+    if(key === state.reflector) opt.selected = true;
+    reflectorSelect.appendChild(opt);
+  });
+  function updateReflectorHint(){
+    reflectorHint.textContent = REFLECTOR_HINTS[state.reflector];
+  }
+  reflectorSelect.addEventListener('change', ()=>{
+    state.reflector = reflectorSelect.value;
+    updateReflectorHint();
+  });
+  updateReflectorHint();
 
   function updateRotorDisplay(animateIdx){
     state.positions.forEach((p, i)=>{
@@ -266,7 +300,7 @@
     }
 
     // Reflector
-    c = idx(REFLECTOR_B[c]);
+    c = idx(REFLECTORS[state.reflector].wiring[c]);
 
     // Back through rotors: left -> mid -> right
     for(let pos=0; pos<=2; pos++){
@@ -396,14 +430,93 @@
     return result;
   }
 
+  // ===== Output mode: plain Enigma letters, or letters re-encoded as 5-bit binary =====
+  let outputMode = 'letters'; // 'letters' | 'binary'
+
+  function letterToBinary5(ch){
+    return idx(ch).toString(2).padStart(5, '0');
+  }
+  function binaryTextToLetters(text){
+    // Converts every contiguous run of 0/1 digits back into letters, 5 bits at a time.
+    // Anything else (spaces, punctuation) passes through untouched.
+    return text.replace(/[01]+/g, run=>{
+      let out = '';
+      for(let i=0; i+5 <= run.length; i+=5){
+        out += ALPHA[parseInt(run.substr(i,5), 2)];
+      }
+      return out;
+    });
+  }
+  function lettersTextToBinary(text){
+    let out = '';
+    for(const rawCh of text){
+      const ch = rawCh.toUpperCase();
+      out += ALPHA.includes(ch) ? letterToBinary5(ch) : rawCh;
+    }
+    return out;
+  }
+
+  const MODE_NOTES = {
+    letters: 'A single encryption step: your message goes through the Enigma rotor cipher once. Encrypt and Decrypt run the exact same wiring (Enigma is self-reciprocal), so set the same <b>Message Key</b> above before either. Non-letter characters pass through unchanged.',
+    binary: 'Two chained encryption steps: <b>Step 1</b> runs your message through the Enigma rotor cipher, exactly as in 1-Step mode. <b>Step 2</b> takes that result and re-encodes every letter as 5-bit binary (A=00000 … Z=11001). Decrypt reverses both steps in order: binary → letters first, then Enigma decryption. Spaces and punctuation pass through unchanged at every step.'
+  };
+
+  const modeLettersBtn = document.getElementById('modeLettersBtn');
+  const modeBinaryBtn = document.getElementById('modeBinaryBtn');
+  const modeNoteEl = document.getElementById('modeNote');
+  const stepBreakdownEl = document.getElementById('stepBreakdown');
+
+  function setOutputMode(mode){
+    outputMode = mode;
+    modeLettersBtn.classList.toggle('active', mode === 'letters');
+    modeBinaryBtn.classList.toggle('active', mode === 'binary');
+    modeNoteEl.innerHTML = MODE_NOTES[mode];
+    if(mode === 'letters'){
+      stepBreakdownEl.style.display = 'none';
+      stepBreakdownEl.innerHTML = '';
+    }
+  }
+  modeLettersBtn.addEventListener('click', ()=> setOutputMode('letters'));
+  modeBinaryBtn.addEventListener('click', ()=> setOutputMode('binary'));
+  setOutputMode('letters');
+
+  function showSteps(steps){
+    stepBreakdownEl.style.display = '';
+    stepBreakdownEl.innerHTML = steps.map((s, i)=>{
+      const line = '<div class="step-line"><span class="step-tag">Step '+(i+1)+' — '+s.label+'</span><span class="step-value">'+
+        (s.value.length > 160 ? s.value.slice(0,160)+'…' : s.value) + '</span></div>';
+      return i < steps.length-1 ? line + '<div class="step-arrow">▾</div>' : line;
+    }).join('');
+  }
+
   const msgInputEl = document.getElementById('msgInput');
   const msgOutputEl = document.getElementById('msgOutput');
 
   document.getElementById('encryptBtn').addEventListener('click', ()=>{
-    msgOutputEl.value = processMessageText(msgInputEl.value);
+    const cipherLetters = processMessageText(msgInputEl.value);
+    if(outputMode === 'binary'){
+      const binaryResult = lettersTextToBinary(cipherLetters);
+      msgOutputEl.value = binaryResult;
+      showSteps([
+        { label: 'Enigma cipher', value: cipherLetters || '(empty)' },
+        { label: 'Binary encode', value: binaryResult || '(empty)' }
+      ]);
+    } else {
+      msgOutputEl.value = cipherLetters;
+    }
   });
   document.getElementById('decryptBtn').addEventListener('click', ()=>{
-    msgOutputEl.value = processMessageText(msgInputEl.value);
+    if(outputMode === 'binary'){
+      const lettersFromBinary = binaryTextToLetters(msgInputEl.value);
+      const plaintext = processMessageText(lettersFromBinary);
+      msgOutputEl.value = plaintext;
+      showSteps([
+        { label: 'Binary decode', value: lettersFromBinary || '(empty)' },
+        { label: 'Enigma decrypt', value: plaintext || '(empty)' }
+      ]);
+    } else {
+      msgOutputEl.value = processMessageText(msgInputEl.value);
+    }
   });
   document.getElementById('swapBtn').addEventListener('click', ()=>{
     const tmp = msgInputEl.value;
